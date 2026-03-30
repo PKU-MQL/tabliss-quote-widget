@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  /* 基础样式 — 透明背景以融入 Tabliss 背景 */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: transparent;
+    font-family: 'Georgia', serif;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 16px;
+  }
+  .quote-wrapper {
+    max-width: 640px;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  .quote-wrapper.visible { opacity: 1; }
+  .quote-text {
+    font-size: 1.2rem;
+    line-height: 1.7;
+    font-style: italic;
+    margin-bottom: 12px;
+  }
+  .quote-text::before { content: '\201C'; }
+  .quote-text::after  { content: '\201D'; }
+  .quote-author {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    letter-spacing: 0.05em;
+  }
+  .quote-author::before { content: '— '; }
+  .refresh-hint {
+    font-size: 0.7rem;
+    opacity: 0.4;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="quote-wrapper" id="wrapper">
+  <p class="quote-text" id="qtext">加载中…</p>
+  <p class="quote-author" id="qauthor"></p>
+  <p class="refresh-hint" id="hint"></p>
+</div>
+
+<script>
+const CACHE_KEY   = 'tng_quote_cache';
+const CACHE_TIME  = 'tng_quote_time';
+const TIME_INTERVAL  = 5 * 60 * 1000; // 5分钟毫秒数
+const API_URL     = 'https://dummyjson.com/quotes/random';
+
+async function loadQuote() {
+  const now        = Date.now();
+  const lastFetch  = parseInt(localStorage.getItem(CACHE_TIME) || '0');
+  const cached     = localStorage.getItem(CACHE_KEY);
+  const elapsed    = now - lastFetch;
+
+  // 如果缓存存在且未满 1 小时，直接显示缓存
+  if (cached && elapsed < TIME_INTERVAL) {
+    const q = JSON.parse(cached);
+    showQuote(q.text, q.author, new Date(lastFetch));
+    return;
+  }
+
+  // 否则请求新名言
+  try {
+    const res  = await fetch(API_URL);
+    const data = await res.json();
+    const q    = { text: data.quote, author: data.author };
+    localStorage.setItem(CACHE_KEY,  JSON.stringify(q));
+    localStorage.setItem(CACHE_TIME, now.toString());
+    showQuote(q.text, q.author, new Date(now));
+  } catch (err) {
+    // 请求失败时回退到缓存
+    if (cached) {
+      const q = JSON.parse(cached);
+      showQuote(q.text, q.author, new Date(lastFetch));
+    } else {
+      showQuote('无法加载名言，请检查网络连接。', '', null);
+    }
+  }
+}
+
+function showQuote(text, author, fetchTime) {
+  document.getElementById('qtext').textContent   = text;
+  document.getElementById('qauthor').textContent = author;
+  if (fetchTime) {
+    const timeStr = fetchTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    <!-- document.getElementById('hint').textContent = `${timeStr} 更新`; -->
+  }
+  const wrapper = document.getElementById('wrapper');
+  // 稍作延迟让 transition 生效
+  requestAnimationFrame(() => wrapper.classList.add('visible'));
+}
+
+loadQuote();
+</script>
+</body>
+</html>
