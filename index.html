@@ -25,7 +25,7 @@
   }
   .quote-wrapper.visible { opacity: 1; }
   .quote-text {
-    font-size: 1.35rem;
+    font-size: 2.0rem;
     line-height: 1.7;
     font-style: italic;
     margin-bottom: 12px;
@@ -33,7 +33,7 @@
   .quote-text::before { content: '\201C'; }
   .quote-text::after  { content: '\201D'; }
   .quote-author {
-    font-size: 1rem;
+    font-size: 1.4rem;
     opacity: 0.8;
     letter-spacing: 0.05em;
   }
@@ -104,7 +104,7 @@ function showQuote(text, author, fetchTime) {
 
 loadQuote();
 
-setInterval(loadQuote, 2.5 * 60 * 1000);
+setInterval(loadQuote, 60 * 1000);
 </script>
 </body>
 </html>
